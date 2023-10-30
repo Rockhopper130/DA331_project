@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request
-from preprocess import Transform
-from inference import Inference
+from utils.preprocess import Transform
+from utils.inference import Inference
 
 app = Flask(__name__, template_folder="website/public/")
 
