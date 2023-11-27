@@ -86,7 +86,7 @@ function DashBord() {
   const [searchedmovie, setsearchedmovie] = useState('batman');
   const [error,seterror]=useState(false)
   const [Movies, setMovies] = useState([]);
-  const [selectedGenre, setSelectedGenre] = useState('Action'); // Set your initial genre
+  const [selectedGenre, setSelectedGenre] = useState('Action'); 
   
   
   async function search() {
@@ -101,12 +101,15 @@ function DashBord() {
       else{
         setPoster('/nopreview.png')
       }
+      const updatedGenre=data.Genre;
+      setSelectedGenre(updatedGenre.replace(/\s+/g, '+'))
       settitle(data.Title);
       setYear(data.Year);
       setGenre(data.Genre);
       setRating(data.imdbRating);
       setRating_count(data.imdbVotes);
       seterror(false);
+
     }
     
   }
@@ -124,8 +127,7 @@ function DashBord() {
       const data = await response.json();
 
       if (data.Response === 'True') {
-        // Slice the results to get at least 10 movies
-        const slicedMovies = data.Search.slice(0, 10);
+        const slicedMovies = data.Search.slice(0, 5);
         setMovies(slicedMovies);
       } else {
       }
@@ -136,7 +138,9 @@ function DashBord() {
 
   fetchMovies();
 }, [selectedGenre]);
-
+function suggestionshandller(movie){
+search(movie);
+}
  
   // console.log(data)
   return (
@@ -200,19 +204,17 @@ function DashBord() {
       </div>
       </div>
       <h1 className='ml-[15%] my-2 font-bold'>Similar recommendations</h1>
-      <div className=" mx-16 flex transition">
+      <div className=" flex flex-col justify-evenly   mx-16   transition">
   {Movies.map((data) => (
     <div  className="mx-5">
-      <div className="flex px-10 py-2 border">
-        <img src={data.Poster} width="320px" alt={data.Title} />
+      <div className="flex gap-2 px-10 py-2 border">
+        <img src={data.Poster} className=' rounded-md' alt={data.Title} />
         <div className="overflow-hidden">
-          <h1 className="whitespace-nowrap text-2xl font-bold">{data.tTitle}</h1>
-          <h2 className="whitespace-nowrap text-[#161513] items-center text-sm">
-            {data.year} | {data.Genre}
+          <h1 className="whitespace-nowrap text-sm font-bold">{data.Title}</h1>
+          <h2 className="whitespace-nowrap text-[#161513] items-center text-xs">
+            {data.Year}
           </h2>
-          <h2 className="whitespace-nowrap text-[#3C9014] font-semibold">
-            {data.imdbRating} ({data.imdbVotes})
-          </h2>
+          
         </div>
       </div>
     </div>
