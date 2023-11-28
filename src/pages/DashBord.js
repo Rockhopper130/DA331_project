@@ -13,9 +13,10 @@ function DashBord() {
   const [error, seterror] = useState(false);
   const [Movies, setMovies] = useState([]);
   const [selectedGenre, setSelectedGenre] = useState("Action");
+  const [loading, setLoading] = useState(true);
 
   async function search() {
-    {
+    try{
       var url = `http://www.omdbapi.com/?t=${searchedmovie}&apikey=62cc7ab5`;
       let responce = await fetch(url);
       let data = await responce.json();
@@ -37,9 +38,14 @@ function DashBord() {
         seterror(false);
       }
     }
+    catch(err){
+      console.log(err)
+    }
+    finally{
+      setLoading(false);
+    }
   }
 
-  console.log(Movies);
   useEffect(() => {
     const fetchMovies = async () => {
       try {
@@ -48,18 +54,53 @@ function DashBord() {
         const data = await response.json();
 
         if (data.Response === "True") {
-          const slicedMovies = data.Search.slice(0, 5);
+          const slicedMovies = data.Search.slice(0, 10);
           setMovies(slicedMovies);
         } else {
         }
       } catch (err) {
         console.error(err);
       }
+      finally{
+        setLoading(false);
+      }
     };
 
     fetchMovies();
   }, [selectedGenre]);
 
+  const handleSuggestionClick = async (movieTitle) => {
+    try {
+      const url = `http://www.omdbapi.com/?t=${movieTitle}&apikey=62cc7ab5`;
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.Response === "False") {
+        seterror(true);
+      } else {
+        if (data.Poster !== "N/A") {
+          setPoster(data.Poster);
+        } else {
+          setPoster("/nopreview.png");
+        }
+
+        const updatedGenre = data.Genre;
+        setSelectedGenre(updatedGenre.split(',')[0].trim());
+        settitle(data.Title);
+        setYear(data.Year);
+        setGenre(data.Genre);
+        setRating(data.imdbRating);
+        setRating_count(data.imdbVotes);
+        seterror(false);
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } catch (err) {
+      console.error(err);
+      seterror(true);
+    }
+    finally{setLoading(false);}
+  };
   // console.log(data)
   return (
     <div className=" flex flex-col ">
@@ -90,7 +131,9 @@ function DashBord() {
       </div>
       <div className=" mx-[15%] ">
         <div className=" flex justify-center gap-4 border m-2 p-4  ">
-          <img src={Poster} className="rounded-md" width="300px" />
+      {loading? <div className="animate-pulse">
+          <div className="bg-gray-400 h-[450px] rounded-md w-[300px] "></div>
+        </div>:<img src={Poster} className="rounded-md" width="300px" />}
           <div>
             <h1 className="text-2xl font-bold">{Title}</h1>
             <h2 className=" text-[#161513] items-center text-sm">
@@ -140,9 +183,11 @@ function DashBord() {
       <h1 className="ml-[15%] my-2 font-bold">Similar recommendations</h1>
       <div className=" flex flex-col justify-evenly   mx-16   transition">
         {Movies.map((data) => (
-          <div className="mx-5">
+          <div onClick={()=>handleSuggestionClick(data.Title)} className="mx-5 cursor-pointer bg-[#F7F7F7]">
             <div className="flex gap-2 px-10 py-2 border">
-              <img src={data.Poster} className=" rounded-md" alt={data.Title} />
+              {loading? <div className="animate-pulse">
+          <div className="bg-gray-400 h-48 w-44 mb-4"></div>
+        </div>:<img src={data.Poster} width="160px"  className=" cursor-pointer rounded-md" alt={data.Title} />}
               <div className="overflow-hidden">
                 <h1 className="whitespace-nowrap text-sm font-bold">
                   {data.Title}
