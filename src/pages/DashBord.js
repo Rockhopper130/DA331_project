@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import MoviesReviews from "../components/sampleReviews";
 function DashBord() {
   const [Poster, setPoster] = useState(
-    "https://m.media-amazon.com/images/M/MV5BNzQzMzJhZTEtOWM4NS00MTdhLTg0YjgtMjM4MDRkZjUwZDBlXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_SX300.jpg"
+    "https://m.media-amazon.com/images/M/MV5BZWQ0OTQ3ODctMmE0MS00ODc2LTg0ZTEtZWIwNTUxOGExZTQ4XkEyXkFqcGdeQXVyNzAwMjU2MTY@._V1_SX300.jpg"
   );
   const [Title, settitle] = useState("Batman");
   const [Year, setYear] = useState("1982");
@@ -153,8 +153,8 @@ function DashBord() {
       onChange={(e) => {
         const updatedValue = e.target.value.replace(/\s+/g, "+");
         setsearchedmovie(updatedValue);
-        if(searchedmovie===''){e.value=''}
       }}
+      value={searchedmovie}
       className="flex-1 px-3 border-2 rounded-xl border-grey py-2 mr-5 outline-none w-[40%]"
       placeholder="Search Movies..."
     />
@@ -167,7 +167,7 @@ function DashBord() {
   </div>
   <ul className="absolute mt-10 ">
     {suggestions.map((suggestion, index) => (
-      <li key={index} className="border px-3 rounded-md bg-[#F7F7F7] py-2" onClick={() => handleSuggestionClick(suggestion)}>
+      <li key={index} className="border px-3 cursor-pointer rounded-md bg-[#F7F7F7] py-2" onClick={() => handleSuggestionClick(suggestion)}>
         {suggestion}
       </li>
     ))}
