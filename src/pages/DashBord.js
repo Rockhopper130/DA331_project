@@ -154,7 +154,6 @@ function DashBord() {
         const updatedValue = e.target.value.replace(/\s+/g, "+");
         setsearchedmovie(updatedValue);
       }}
-      value={searchedmovie}
       className="flex-1 px-3 border-2 rounded-xl border-grey py-2 mr-5 outline-none w-[40%]"
       placeholder="Search Movies..."
     />
