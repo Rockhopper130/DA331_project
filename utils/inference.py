@@ -7,8 +7,6 @@ from pyspark.ml.linalg import VectorUDT, DenseVector
 
 from pyspark.sql.types import StructType, StructField, FloatType, IntegerType, StringType, ArrayType, DoubleType
 
-from xgboost.spark import SparkXGBClassifierModel
-
 import os
 import sys
 os.environ['PYSPARK_PYTHON'] = sys.executable
@@ -26,7 +24,7 @@ class Inference():
         return (result) if result else None
     
     def convert_embed(df):
-        df["parsed_embeddings"] = Inference.parser(df["embeddings"])
+        df["parsed_embeddings"] = Inference.parser(df["embeddings_distilbert"])
         return df
         
     def make_it_vector(data):
@@ -51,7 +49,7 @@ class Inference():
             StructField("word_unique_percent", DoubleType(), True),
             StructField("punct_percent", DoubleType(), True),
             StructField("reviews_pre", StringType(), True),
-            StructField("embeddings", StringType(), True),
+            StructField("embeddings_distilbert", StringType(), True),
             StructField("parsed_embeddings", ArrayType(FloatType(), containsNull=True), True)
         ])
         
@@ -66,11 +64,35 @@ class Inference():
         assembler = VectorAssembler(inputCols=feature_cols, outputCol="features")
         data = assembler.transform(data)
         
-        model_path = "models/pyspark_XGB_model"
-        xgb_model = SparkXGBClassifierModel.load(model_path)
-        predictions = xgb_model.transform(data)
-        pred = predictions.select("prediction").collect()[0][0]
+        pred = []
         
-        # spark.stop()
+        from xgboost.spark import SparkXGBClassifierModel
+        model_path = "models/pyspark_distilbert_XGB_model"
+        model = SparkXGBClassifierModel.load(model_path)
+        predictions = model.transform(data)
+        pred.append(predictions.select("prediction").collect()[0][0])
         
-        return pred
+        # from pyspark.ml.classification import NaiveBayesModel
+        # model_path = "models/pyspark_distilbert_NB_model"
+        # nb_model = NaiveBayesModel.load(model_path)
+        # predictions_nb = nb_model.transform(data)
+        # pred.append(predictions_nb.select("prediction").collect()[0][0])
+        
+        from pyspark.ml.classification import LinearSVCModel
+        model_path = "models/pyspark_distilbert_SVM_model"
+        model = LinearSVCModel.load(model_path)
+        predictions = model.transform(data)
+        pred.append(predictions.select("prediction").collect()[0][0])
+        
+
+        from pyspark.ml.classification import LogisticRegressionModel
+        model_path = "models/pyspark_distilbert_LR_model"
+        lr_model = LogisticRegressionModel.load(model_path)
+        predictions_lr = lr_model.transform(data)
+        pred.append(predictions_lr.select("prediction").collect()[0][0])
+        
+        avg_pred = sum(pred)/3
+        final_pred = 1.0 if avg_pred >= 0.5 else 0.0
+        print("final_pred", final_pred)
+        
+        return final_pred
