@@ -7,6 +7,8 @@ from pyspark.ml.linalg import VectorUDT, DenseVector
 
 from pyspark.sql.types import StructType, StructField, FloatType, IntegerType, StringType, ArrayType, DoubleType
 
+from tensorflow import keras
+
 import os
 import sys
 os.environ['PYSPARK_PYTHON'] = sys.executable
@@ -66,17 +68,26 @@ class Inference():
         
         pred = []
         
+        model = model.load("../models/CNN.keras")
+        pred.append(model.predict(data["reviews_pre"]))
+        
+        model = model.load("../models/LSTM.keras")
+        pred.append(model.predict(data["reviews_pre"]))
+        
+        model = model.load("../models/NN.keras")
+        pred.append(model.predict(data["reviews_pre"]))
+        
         from xgboost.spark import SparkXGBClassifierModel
         model_path = "models/pyspark_distilbert_XGB_model"
         model = SparkXGBClassifierModel.load(model_path)
         predictions = model.transform(data)
         pred.append(predictions.select("prediction").collect()[0][0])
         
-        # from pyspark.ml.classification import NaiveBayesModel
-        # model_path = "models/pyspark_distilbert_NB_model"
-        # nb_model = NaiveBayesModel.load(model_path)
-        # predictions_nb = nb_model.transform(data)
-        # pred.append(predictions_nb.select("prediction").collect()[0][0])
+        from pyspark.ml.classification import NaiveBayesModel
+        model_path = "models/pyspark_distilbert_NB_model"
+        nb_model = NaiveBayesModel.load(model_path)
+        predictions_nb = nb_model.transform(data)
+        pred.append(predictions_nb.select("prediction").collect()[0][0])
         
         from pyspark.ml.classification import LinearSVCModel
         model_path = "models/pyspark_distilbert_SVM_model"
@@ -84,6 +95,11 @@ class Inference():
         predictions = model.transform(data)
         pred.append(predictions.select("prediction").collect()[0][0])
         
+        from pyspark.ml.classification import RandomForestClassifier
+        model_path = "models/pyspark_distilbert_RF_model"
+        model = RandomForestClassifier.load(model_path)
+        predictions = model.transform(data)
+        pred.append(predictions.select("prediction").collect()[0][0])
 
         from pyspark.ml.classification import LogisticRegressionModel
         model_path = "models/pyspark_distilbert_LR_model"
@@ -91,7 +107,7 @@ class Inference():
         predictions_lr = lr_model.transform(data)
         pred.append(predictions_lr.select("prediction").collect()[0][0])
         
-        avg_pred = sum(pred)/3
+        avg_pred = sum(pred)/8
         final_pred = 1.0 if avg_pred >= 0.5 else 0.0
         print("final_pred", final_pred)
         
